@@ -1,11 +1,17 @@
 # N1X register contract: confirmed interface and remaining gaps
 
-Full DGX feature parity is **not implemented** for NVDA8810. The working N1X
-backend exposes two power readings and eight temperatures on the validated ASUS
-firmware. The directory returned by MTEL does not describe the missing sensor
-registers. Hardware sharing a silicon design does not establish a firmware ABI.
+Version `0.3.0.rtxspark.4` integrates the validated H7607BA.300 MMIO backend:
+15 power readings, eight ACPI temperatures, four reduction-only power controls,
+and unmodified raw status, energy and diagnostic words. Other matching N1X
+systems retain ACPI sensor discovery; the MMIO extension is firmware-gated.
+Full DGX parity is not claimed: exact energy calibration, physical PROCHOT
+polarity and diagnostic units remain unresolved.
 
-The matching Windows vendor driver has now been obtained; see [Windows vendor driver evidence](windows-vendor-drivers.md) for the exact NVDA8810/NVDA8800 driver, versions, hashes and the NVPCF shared-memory access implementation. The observations below describe the initial firmware inspection; [the subsequent extraction and validation report](validation/README.md) establishes the CPUEB aliases, relative/absolute mappings and measured power/counter relationships.
+The sections below retain the initial firmware observations. Subsequent
+[hardware validation](validation/open-gaps-research.md) and
+[Windows reader execution](validation/windows-decompiler-analysis.md) establish
+the register/control contracts now integrated. See the [README](../README.md)
+for current installation and interface details.
 
 ## Firmware evidence
 
@@ -81,29 +87,25 @@ meaning is unknown. They must not be labelled as extra power channels or limits
 based on proximity to the known fields. All these thermal zones use the same
 `_CRT = 0x7fffffff` sentinel; that sentinel does not identify power units.
 
-## Contract needed for full support
+## Integrated contract and remaining gaps
 
-| DGX feature | N1X evidence still required |
+| Feature | Current implementation / remaining question |
 |---|---|
-| Additional power rails and EWMA averages | Named field mapping, units, validity, update cadence and availability |
-| Four energy counters | Mapping, counter width, unit, rollover, reset and suspend behavior |
-| PROCHOT / power-limit status | Field location, bit meanings and validity |
-| Junction maximum | Definition and unit; a critical-trip sentinel cannot substitute for it |
-| PL1 / PL2 / SYSPL1 / SYSPL2 | OS request and effective-value fields, bounds, ownership, firmware notification and acknowledgement, timeout and reset behavior |
+| Power subdivisions and four EWMA values | Validated offsets and mW conversion integrated on H7607BA.300; accounting/filter details are not redefined |
+| Four physical controllers | PL1, PL2, SysPL1, SysPL2 integrated; floor/ceiling and current EC default enforced; zero reset and owned-override cleanup |
+| Five energy triplets | All 15 words exposed read-only and raw; exact scale, overflow arithmetic and reset/suspend accounting unresolved |
+| Status | Raw `0x048` and `0x04c` exposed; no inferred PROCHOT alarm |
+| Package temperature | ACPI decikelvin conversion retained; whole-degree `0x81c` available raw |
+| `0x038`, `0x380..0x38c` | Read-only raw inspection; no control-bit or physical-unit interpretation |
 
-The matching vendor implementation is now available: `nvMeTelemetryKMD.sys`
-2.2.0.0 explicitly binds both MTEL hardware IDs, and `nvpcf.sys` 32.0.16.1679
-contains shared-memory read, write and update routines. See the linked Windows
-analysis for reproducible evidence. Their callers and field semantics still
-need to be traced and checked against read-only captures under controlled CPU
-and GPU loads before implementing controls.
-
-Do not substitute the old DGX offsets, infer a common displacement from the two
-known power readings, calculate software energy and present it as a firmware
-counter, or enable power-limit writes before validating their N1X contract.
-The Windows NVPCF implementation does contain an update store of 1 at the mapped
-base; that establishes a vendor implementation to analyze, not validation of
-all control fields, bounds or acknowledgement behavior.
+The driver maps the vendor-established SPBM base directly only after exact
+firmware gating, recognized MTEL schema, platform ID and range checks. It does
+not use CPUEB table aliases as SPBM registers or relocate the DGX `_CRS` mapping.
+Readback confirms an OS request was stored, while physical application remains
+asynchronous. The current four write paths support reductions, not untested
+increases beyond EC defaults. Earlier load experiments establish their physical
+behavior; runtime integration checks temporarily reduce each limit by 1 W and
+restore it without repeating the workloads.
 
 ## Sources and verification
 
@@ -111,7 +113,7 @@ all control fields, bounds or acknowledgement behavior.
 - [Omarchy N1X thermal fix](https://github.com/omacom/omarchy-pkgs/blob/master/pkgbuilds/linux-omarchy-aarch64/1012-n1x-acpi-thermal-skip-power-telemetry.patch): PSYS/PSOC power readings masquerading as thermal zones on a Dell N1X platform; not a full SPBM register specification.
 - [ASUS published driver metadata](https://www.asus.com/support/webapi/ProductV2/GetPDDrivers?website=global&model=H7607BA&cpu=H7607BA&osid=52): inspected for a matching vendor backend.
 
-After the read-only investigation, the installed module still reported
-`0.3.0.rtxspark.3`; `python3 tests/check-n1x.py --require-all` passed with all ten
-channels, thermal-zone agreement and no power controls. No new sensor channels
-or controls were enabled by this investigation.
+During the initial read-only investigation the installed module was
+`0.3.0.rtxspark.3` with ten channels and no controls. That historical result is
+superseded for the validated P16 by the `.4` implementation described above;
+new runtime evidence is kept in `validation/n1x-mmio-integration.md`.

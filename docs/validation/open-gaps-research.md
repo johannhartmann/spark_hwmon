@@ -1,9 +1,10 @@
 # N1X energy attribution, status and physical power control
 
 Validated on 2026-10-22: ASUS ProArt P16 H7607BA, BIOS H7607BA.300,
-kernel 7.2.8-23-omarchy-p16-asus. The installed module remains
-`0.3.0.rtxspark.3`; these research results have not yet been integrated into
-its ACPI-only backend. No boot configuration or firmware was changed.
+kernel 7.2.8-23-omarchy-p16-asus. The experiments below ran with installed module
+`0.3.0.rtxspark.3`, before MMIO integration. Version `.4` now implements the
+validated power/control contract and raw reader interfaces; see
+[native-driver integration](n1x-mmio-integration.md). No boot configuration or firmware was changed.
 
 ## Results
 

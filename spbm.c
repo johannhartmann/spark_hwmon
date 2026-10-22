@@ -36,6 +36,7 @@
 #include <linux/uuid.h>
 #include <linux/units.h>
 #include <linux/dmi.h>
+#include <linux/mutex.h>
 
 #define DRIVER_NAME	"spbm"
 #define SPBM_SIZE	0x1000
@@ -536,16 +537,25 @@ static const struct n1x_channel n1x_temp[] = {
 	{ "\\_TZ.TUNC", "uncore" },
 };
 
+/* MMIO extensions are enabled only for the independently validated firmware. */
 struct n1x_priv {
+	void __iomem *base;
+	struct mutex lock;
+	u32 owned[4];
+	unsigned long owned_mask;
 	acpi_handle power[ARRAY_SIZE(n1x_power)];
 	acpi_handle temp[ARRAY_SIZE(n1x_temp)];
 };
+
+#include "n1x-mmio.h"
 
 static umode_t n1x_visible(const void *data, enum hwmon_sensor_types type,
 			 u32 attr, int ch)
 {
 	const struct n1x_priv *p = data;
 
+	if (type == hwmon_power && ch >= ARRAY_SIZE(n1x_power))
+		return n1x_mmio_visible(p, attr, ch - ARRAY_SIZE(n1x_power));
 	if (type == hwmon_power && ch < ARRAY_SIZE(n1x_power) &&
 	    p->power[ch] && (attr == hwmon_power_input || attr == hwmon_power_label))
 		return 0444;
@@ -562,6 +572,8 @@ static int n1x_read(struct device *dev, enum hwmon_sensor_types type,
 	unsigned long long raw;
 	acpi_handle handle;
 
+	if (type == hwmon_power && ch >= ARRAY_SIZE(n1x_power))
+		return n1x_mmio_read(p, attr, ch - ARRAY_SIZE(n1x_power), val);
 	if (type == hwmon_power && attr == hwmon_power_input && ch < ARRAY_SIZE(n1x_power))
 		handle = p->power[ch];
 	else if (type == hwmon_temp && attr == hwmon_temp_input && ch < ARRAY_SIZE(n1x_temp))
@@ -586,6 +598,11 @@ static int n1x_read(struct device *dev, enum hwmon_sensor_types type,
 static int n1x_read_string(struct device *dev, enum hwmon_sensor_types type,
 			   u32 attr, int ch, const char **str)
 {
+	if (type == hwmon_power && attr == hwmon_power_label &&
+	    ch >= ARRAY_SIZE(n1x_power) && ch < ARRAY_SIZE(n1x_power) + ARRAY_SIZE(n1x_mmio_power)) {
+		*str = n1x_mmio_power[ch - ARRAY_SIZE(n1x_power)].label;
+		return 0;
+	}
 	if (type == hwmon_power && attr == hwmon_power_label && ch < ARRAY_SIZE(n1x_power))
 		*str = n1x_power[ch].label;
 	else if (type == hwmon_temp && attr == hwmon_temp_label && ch < ARRAY_SIZE(n1x_temp))
@@ -599,11 +616,18 @@ static const struct hwmon_ops n1x_ops = {
 	.is_visible = n1x_visible,
 	.read = n1x_read,
 	.read_string = n1x_read_string,
+	.write = n1x_mmio_write,
 };
 
 static const struct hwmon_channel_info * const n1x_info[] = {
 	HWMON_CHANNEL_INFO(power, HWMON_P_INPUT | HWMON_P_LABEL,
-			   HWMON_P_INPUT | HWMON_P_LABEL),
+			   HWMON_P_INPUT | HWMON_P_LABEL,
+		HWMON_P_INPUT | HWMON_P_LABEL, HWMON_P_INPUT | HWMON_P_LABEL,
+		HWMON_P_INPUT | HWMON_P_LABEL, HWMON_P_INPUT | HWMON_P_LABEL,
+		HWMON_P_INPUT | HWMON_P_LABEL, HWMON_P_INPUT | HWMON_P_LABEL,
+		HWMON_P_INPUT | HWMON_P_LABEL, HWMON_P_INPUT | HWMON_P_LABEL,
+		HWMON_P_INPUT | HWMON_P_LABEL,
+		N1X_LIMIT_CONFIG, N1X_LIMIT_CONFIG, N1X_LIMIT_CONFIG, N1X_LIMIT_CONFIG),
 	HWMON_CHANNEL_INFO(temp, HWMON_T_INPUT | HWMON_T_LABEL,
 		HWMON_T_INPUT | HWMON_T_LABEL, HWMON_T_INPUT | HWMON_T_LABEL,
 		HWMON_T_INPUT | HWMON_T_LABEL, HWMON_T_INPUT | HWMON_T_LABEL,
@@ -642,10 +666,18 @@ static int n1x_add(struct acpi_device *adev)
 	}
 	if (!power && !temp)
 		return dev_err_probe(dev, -ENODEV, "no supported RTX Spark sensors found\n");
-	hwdev = devm_hwmon_device_register_with_info(dev, "spbm_n1x", p, &n1x_chip, NULL);
+	mutex_init(&p->lock);
+	if (power_units_known) {
+		i = n1x_mmio_init(dev, p);
+		if (i)
+			return i;
+	}
+	hwdev = devm_hwmon_device_register_with_info(dev, "spbm_n1x", p, &n1x_chip,
+						 p->base ? n1x_raw_groups : NULL);
 	if (IS_ERR(hwdev))
 		return PTR_ERR(hwdev);
-	dev_info(dev, "registered %d power + %d temperature channels (read-only)\n", power, temp);
+	dev_info(dev, "registered %d ACPI power + %d temperature channels; MMIO %s\n",
+		 power, temp, p->base ? "enabled" : "unavailable");
 	return 0;
 }
 
@@ -854,6 +886,6 @@ static struct acpi_driver spbm_driver = {
 module_acpi_driver(spbm_driver);
 
 MODULE_LICENSE("GPL");
-MODULE_VERSION("0.3.0.rtxspark.3");
+MODULE_VERSION("0.3.0.rtxspark.4");
 MODULE_AUTHOR("Antheas Kapenekakis <antheas@cs.aau.dk>");
 MODULE_DESCRIPTION("NVIDIA DGX Spark and RTX Spark N1X telemetry hwmon driver");

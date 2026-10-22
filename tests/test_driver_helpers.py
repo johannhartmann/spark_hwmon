@@ -17,6 +17,14 @@ class DriverHelperTests(unittest.TestCase):
                             '-o', binary], check=True)
             subprocess.run([binary], check=True)
 
+    def test_production_mmio_callbacks(self):
+        with tempfile.TemporaryDirectory() as directory:
+            binary = str(Path(directory) / 'mmio-tests')
+            subprocess.run(['cc', '-std=gnu11', '-Wall', '-Wextra', '-Werror',
+                            '-Wno-sign-compare', '-Wno-unused-function', '-Wno-unused-variable',
+                            str(ROOT / 'tests/test_n1x_mmio.c'), '-o', binary], check=True)
+            subprocess.run([binary], check=True)
+
     def test_dkms_and_loaded_module_version_match(self):
         dkms = re.search(r'PACKAGE_VERSION="([^"]+)"', (ROOT / 'dkms.conf').read_text())[1]
         module = re.search(r'MODULE_VERSION\("([^"]+)"\)', (ROOT / 'spbm.c').read_text())[1]

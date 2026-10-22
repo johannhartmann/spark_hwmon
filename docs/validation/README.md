@@ -176,7 +176,7 @@ files, 15 original-binary tests skip and the 24 portable/recorded tests remain.
 The [research follow-up](open-gaps-research.md) establishes E-core counter
 attribution with selective affinity loads, identifies the actual status fields,
 and physically validates all four power controllers and their reset behavior.
-The complete evidence now contains 26,434 samples and 56 tests (23 require the
+The complete evidence now contains 26,434 samples and 59 tests (23 require the
 pinned vendor binaries). Firmware energy calibration, PROCHOT polarity and
 internal diagnostic encodings remain unproven. The installed driver is unchanged.
 
@@ -241,6 +241,7 @@ sample labels; the capture tool never launches workloads or writes device state.
   recognizer accepts the five short keys; the Windows aliases are extracted and
   tested here but have not been added to the installed Linux driver.
 
-The installed Linux driver remains the existing read-only backend. These results
+These experiments used the original read-only Linux backend; version `.4`
+now integrates the confirmed contract (see [integration](n1x-mmio-integration.md)). These results
 are a tested basis for further implementation, not a claim of full DGX feature
 parity or universal RTX Spark hardware validation.

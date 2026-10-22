@@ -7,7 +7,7 @@ version=$(sed -n 's/^PACKAGE_VERSION="\([^"]*\)"$/\1/p' "$repo/dkms.conf")
 [[ $version =~ ^[0-9A-Za-z._+-]+$ ]]
 release=$(uname -r)
 source_dir=/usr/src/spbm-$version
-files=(spbm.c n1x-acpi.h Makefile dkms.conf)
+files=(spbm.c n1x-acpi.h n1x-mmio.h Makefile dkms.conf)
 if [[ -e $source_dir ]]; then
   for file in "${files[@]}"; do
     cmp -s "$repo/$file" "$source_dir/$file" || {
@@ -51,4 +51,8 @@ fi
 dkms install --force -m spbm -v "$version" -k "$release"
 modprobe spbm
 [[ $(cat /sys/module/spbm/version) == "$version" ]]
+if [[ $(cat /sys/class/dmi/id/product_name) == 'ProArt P16 H7607BA' &&
+      $(cat /sys/class/dmi/id/bios_version) == 'H7607BA.300' ]]; then
+  python3 "$repo/tests/check-n1x.py" --require-all --require-mmio
+fi
 printf 'Loaded spbm/%s; other kernels preserved.\n' "$version"

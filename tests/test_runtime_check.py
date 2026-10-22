@@ -42,6 +42,34 @@ class RuntimeCheckTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             checker.check(self.root)
 
+    def extended_device(self):
+        (self.root / 'prochot_raw').write_text('1')
+        for index, label in enumerate(sorted(checker.MMIO_POWER), 3):
+            stem = f'power{index}'
+            self.sensor(stem, label, 15000000)
+            if label in checker.LIMITS:
+                for suffix, value in (('cap', 65000000), ('min', 100000), ('max', 65000000)):
+                    (self.root / f'{stem}_{suffix}').write_text(str(value))
+        for name in ('pl_level_raw', 'control_038_raw', 'diagnostic_380_raw',
+                     'diagnostic_384_raw', 'diagnostic_388_raw', 'diagnostic_38c_raw'):
+            (self.root / name).write_text('0')
+        for domain in ('pkg', 'cpu_e', 'cpu_p', 'gpc', 'gpu'):
+            for suffix in ('raw', 'overflow_raw', 'clear_raw'):
+                (self.root / f'{domain}_energy_{suffix}').write_text('0')
+
+    def test_extended_backend_keeps_gpu_power_and_temperature_distinct(self):
+        self.extended_device()
+        self.sensor('temp6', 'gpu', 45000)
+        values = checker.check(self.root, require_mmio=True)
+        self.assertEqual(values['gpu'], 45000)
+        self.assertEqual(values['power:gpu'], 15000000)
+
+    def test_extended_backend_rejects_unvalidated_energy_units(self):
+        self.extended_device()
+        (self.root / 'energy1_input').write_text('1234')
+        with self.assertRaises(ValueError):
+            checker.check(self.root, require_mmio=True)
+
     def test_wrong_sensor_class_rejected(self):
         self.sensor('temp1', 'sys_total', 15000000)
         with self.assertRaises(ValueError):
