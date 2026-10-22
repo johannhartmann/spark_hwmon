@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
- * NVIDIA DGX Spark (GB10) SPBM Power Telemetry hwmon driver
+ * NVIDIA DGX Spark (GB10) and RTX Spark (N1X) telemetry hwmon driver
  *
  * Exposes the System Power Budget Manager (SPBM) shared memory as
  * standard Linux hwmon sensors. The MTEL (NVDA8800) ACPI device
@@ -34,7 +34,6 @@
 #include <linux/acpi.h>
 #include <linux/list.h>
 #include <linux/uuid.h>
-#include <linux/dmi.h>
 #include <linux/units.h>
 
 #define DRIVER_NAME	"spbm"
@@ -503,22 +502,53 @@ static int spbm_dsm_resolve_offsets(struct device *dev, acpi_handle handle,
 
 
 /*
- * N1X laptops use a different MTEL _DSM register schema from GB10.
- * H7607BA.300 already provides serialized ACPI methods for live telemetry:
- * PSYS/PSOC return mW, while the actual thermal zones return decikelvin.
- * Use those firmware accessors instead of guessing an SPBM MMIO layout.
- * This backend deliberately exposes no power-limit writes.
+ * RTX Spark NVDA8810 uses the flat MTEL resource-directory ABI, unlike
+ * GB10's named sensor-offset ABI. Recognize that ABI before evaluating
+ * optional thermal-zone accessors. Never reuse DGX offsets or map MMIO.
  */
-static const struct dmi_system_id n1x_supported[] = {
-	{
-		.matches = {
-			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "ASUS"),
-			DMI_EXACT_MATCH(DMI_PRODUCT_NAME, "ProArt P16 H7607BA"),
-			DMI_EXACT_MATCH(DMI_BIOS_VERSION, "H7607BA.300"),
-		},
-	},
-	{ }
-};
+static bool n1x_supported_schema(acpi_handle handle)
+{
+	static const char * const keys[] = { "CFL", "CPL", "CBL", "CCI", "CPI" };
+	union acpi_object arg_elem = { .integer = { .type = ACPI_TYPE_INTEGER } };
+	union acpi_object arg_pkg = { .package = {
+		.type = ACPI_TYPE_PACKAGE, .count = 1, .elements = &arg_elem,
+	} };
+	union acpi_object *out;
+	unsigned long seen = 0;
+	int resource, i, j;
+	bool valid = false;
+
+	if (!acpi_check_dsm(handle, &mtel_dsm_guid, 0, BIT(1) | BIT(2)))
+		return false;
+	resource = spbm_dsm_find_resource(handle, "SPBM");
+	if (resource < 0)
+		return false;
+	arg_elem.integer.value = resource;
+	out = acpi_evaluate_dsm(handle, &mtel_dsm_guid, 0, 2, &arg_pkg);
+	if (!out)
+		return false;
+	if (out->type != ACPI_TYPE_PACKAGE || out->package.count % 2)
+		goto done;
+	for (i = 0; i < out->package.count; i += 2) {
+		union acpi_object *name = &out->package.elements[i];
+		union acpi_object *offset = &out->package.elements[i + 1];
+
+		if (name->type != ACPI_TYPE_STRING || offset->type != ACPI_TYPE_INTEGER ||
+		    offset->integer.value > U32_MAX || offset->integer.value % 4)
+			goto done;
+		for (j = 0; j < ARRAY_SIZE(keys); j++) {
+			if (strcmp(name->string.pointer, keys[j]))
+				continue;
+			if (seen & BIT(j))
+				goto done;
+			seen |= BIT(j);
+		}
+	}
+	valid = seen == GENMASK(ARRAY_SIZE(keys) - 1, 0);
+done:
+	ACPI_FREE(out);
+	return valid;
+}
 
 struct n1x_channel {
 	const char *path;
@@ -622,39 +652,55 @@ static const struct hwmon_chip_info n1x_chip = {
 	.info = n1x_info,
 };
 
+/* Discover only thermal-zone objects, never arbitrary similarly named devices. */
+static acpi_handle n1x_find_sensor(const char *path, bool power)
+{
+	acpi_handle handle;
+	acpi_object_type type;
+	unsigned long long critical;
+
+	if (ACPI_FAILURE(acpi_get_handle(NULL, (acpi_string)path, &handle)) ||
+	    ACPI_FAILURE(acpi_get_type(handle, &type)) || type != ACPI_TYPE_THERMAL ||
+	    !acpi_has_method(handle, "_TMP"))
+		return NULL;
+	/*
+	 * In this MTEL ABI, PSYS/PSOC are mW telemetry disguised as thermal
+	 * zones. Require their no-thermal-trip sentinel before using that
+	 * nonstandard unit contract. A real thermal zone must not become power.
+	 */
+	if (power && (ACPI_FAILURE(acpi_evaluate_integer(handle, "_CRT", NULL, &critical)) ||
+		      critical != 0x7fffffff))
+		return NULL;
+	return handle;
+}
+
 static int n1x_add(struct acpi_device *adev)
 {
 	struct device *dev = &adev->dev, *hwdev;
 	struct n1x_priv *p;
-	int i, found = 0;
+	int i, power = 0, temp = 0;
 
-	if (!dmi_check_system(n1x_supported))
-		return -ENODEV;
+	if (!n1x_supported_schema(adev->handle))
+		return dev_err_probe(dev, -ENODEV, "unsupported RTX Spark MTEL schema\n");
 	p = devm_kzalloc(dev, sizeof(*p), GFP_KERNEL);
 	if (!p)
 		return -ENOMEM;
 	for (i = 0; i < ARRAY_SIZE(n1x_power); i++) {
-		if (ACPI_SUCCESS(acpi_get_handle(NULL, (acpi_string)n1x_power[i].path,
-					       &p->power[i])) &&
-		    acpi_has_method(p->power[i], "_TMP"))
-			found++;
-		else
-			p->power[i] = NULL;
+		p->power[i] = n1x_find_sensor(n1x_power[i].path, true);
+		if (p->power[i])
+			power++;
 	}
 	for (i = 0; i < ARRAY_SIZE(n1x_temp); i++) {
-		if (ACPI_SUCCESS(acpi_get_handle(NULL, (acpi_string)n1x_temp[i].path,
-					       &p->temp[i])) &&
-		    acpi_has_method(p->temp[i], "_TMP"))
-			found++;
-		else
-			p->temp[i] = NULL;
+		p->temp[i] = n1x_find_sensor(n1x_temp[i].path, false);
+		if (p->temp[i])
+			temp++;
 	}
-	if (!found)
-		return -ENODEV;
+	if (!power && !temp)
+		return dev_err_probe(dev, -ENODEV, "no supported RTX Spark sensors found\n");
 	hwdev = devm_hwmon_device_register_with_info(dev, "spbm_n1x", p, &n1x_chip, NULL);
 	if (IS_ERR(hwdev))
 		return PTR_ERR(hwdev);
-	dev_info(dev, "registered %d read-only N1X ACPI telemetry channels\n", found);
+	dev_info(dev, "registered %d power + %d temperature channels (read-only)\n", power, temp);
 	return 0;
 }
 
