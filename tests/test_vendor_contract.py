@@ -74,6 +74,23 @@ class VendorContractTests(unittest.TestCase):
         self.assertEqual(m.run(m.UPDATE), 0)
         self.assertEqual(m.writes, [(0, 4, 1)])
 
+    def test_original_sampler_validator_spbm_control_contract(self):
+        # CPU type 2, bus 5. Execute the original validator, not a Python model.
+        cases = ((0, 0, 46, 4, 1), (0, 0, 48, 4, 1),
+                 (0, 0, 46, 8, 0), (0, 2, 36, 4, 1),
+                 (0, 2, 0, 4, 0), (1, 2, 1019, 4, 1),
+                 (0, 1, 36, 4, 0))
+        for tag, direction, payload, length, expected in cases:
+            with self.subTest(tag=tag, direction=direction, payload=payload,
+                              length=length):
+                m = self.machine(self.nvpcf)
+                m.uc.mem_write(m.BUFFER, struct.pack('<I', 2))
+                descriptor = tag | (5 << 8) | (length << 16) | (direction << 24)
+                self.assertEqual(m.run(0x21218, index=payload, buffer=descriptor,
+                                       length=m.BUFFER), expected)
+                self.assertEqual(m.reads, [])
+                self.assertEqual(m.writes, [])
+
     def test_original_descriptor_reads_spbm_without_update(self):
         m = self.machine(self.nvpcf)
         m.uc.mem_write(m.MMIO + 0x310, struct.pack('<I', 745))

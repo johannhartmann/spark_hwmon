@@ -214,6 +214,10 @@ write any power controls. See each tool's `--help`.
 
 Run all offline evidence and original-vendor-instruction tests as documented in
 the [validation README](README.md). Without the pinned vendor artifacts, their
-18 instruction/static-contract tests explicitly skip; recorded-hardware and
+19 instruction/static-contract tests explicitly skip; recorded-hardware and
 portable tests still run. Recomputing a recorded result is not a new hardware
 experiment, and the evidence applies only to the tested BIOS.
+
+Further Ghidra/radare2 results, including the emulated `0x038` control-descriptor
+validator and the Windows E/P power consumer lead, are documented in
+[Windows consumer analysis](windows-decompiler-analysis.md).
