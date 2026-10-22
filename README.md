@@ -1,4 +1,40 @@
-# SPBM - DGX Spark Power Telemetry & Control hwmon Driver
+# SPBM — DGX Spark and ASUS P16 N1X telemetry
+
+## ASUS ProArt P16 H7607BA support
+
+This fork adds a **read-only** N1X backend for `NVDA8810` on the ASUS ProArt P16 H7607BA with BIOS **H7607BA.300**. Other N1X machines and BIOS versions are not enabled. The original DGX Spark `NVDA8800` backend is unchanged.
+
+The P16 MTEL `_DSM` returns a different schema (`CFL`, `CPL`, `CBL`, etc.), so this backend does not reuse the DGX register offsets or map MMIO. It evaluates the firmware’s existing serialized `\\_TZ.*._TMP` methods instead:
+
+| hwmon channel | ACPI zone | Firmware units | hwmon units |
+|---|---|---|---|
+| `sys_total` | `PSYS` | mW | µW |
+| `soc_pkg` | `PSOC` | mW | µW |
+| `soc`, CPU E/P clusters 0/1, `gpu`, `dla`, `uncore` | `TSOC`, `TS0E`, `TS0P`, `TS1E`, `TS1P`, `TGPU`, `TDLA`, `TUNC` | decikelvin | millidegrees Celsius |
+
+The power-unit interpretation matches Omarchy’s N1X ACPI thermal telemetry fix. Firmware temperature zones without valid trip points can still supply readings. This driver only reports telemetry; it does not repair thermal trip points, control fans, or supply missing GPU/CPU power subdivisions.
+
+Validated on kernel `7.2.8-23-omarchy-p16-asus`: ten channels appear under `spbm_n1x`, including live system/SoC power and eight temperatures. No `power*_cap` attributes are created on P16. Run `python3 tests/check-n1x.py` after loading to check sensor ranges and agreement with existing thermal zones.
+
+### Install this fork with DKMS
+
+```sh
+sudo install -d /usr/src/spbm-0.3.0.p16.1
+sudo install -m644 spbm.c Makefile dkms.conf /usr/src/spbm-0.3.0.p16.1/
+sudo dkms add -m spbm -v 0.3.0.p16.1
+sudo dkms build -m spbm -v 0.3.0.p16.1 -k "$(uname -r)"
+sudo dkms install -m spbm -v 0.3.0.p16.1 -k "$(uname -r)"
+sudo modprobe spbm
+sensors spbm_n1x-*
+```
+
+The `NVDA8810` modalias loads the module automatically where the module is installed; DKMS rebuilds for kernel updates with installed headers. Install for older fallback kernels separately if needed. Do not install over an existing upstream `spbm` version without removing that version first.
+
+## Original DGX Spark documentation
+
+The remaining register maps, controls, examples and requirements describe the DGX backend, not the P16. Use the DKMS version above for this fork.
+
+# DGX Spark Power Telemetry & Control hwmon Driver
 
 Linux hwmon driver for the NVIDIA DGX Spark (GB10 SoC) that exposes
 full system power telemetry and power limit controls via standard
@@ -113,8 +149,8 @@ watch -n 0.1 sensors 'spbm-*'
 ```bash
 sudo apt install dkms
 sudo dkms add .
-sudo dkms build spbm/0.3.0
-sudo dkms install spbm/0.3.0
+sudo dkms build spbm/0.3.0.p16.1
+sudo dkms install spbm/0.3.0.p16.1
 ```
 
 The module auto-loads at boot via ACPI modalias matching (`NVDA8800`).

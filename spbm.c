@@ -34,6 +34,8 @@
 #include <linux/acpi.h>
 #include <linux/list.h>
 #include <linux/uuid.h>
+#include <linux/dmi.h>
+#include <linux/units.h>
 
 #define DRIVER_NAME	"spbm"
 #define SPBM_SIZE	0x1000
@@ -499,6 +501,163 @@ static int spbm_dsm_resolve_offsets(struct device *dev, acpi_handle handle,
 	return resolved;
 }
 
+
+/*
+ * N1X laptops use a different MTEL _DSM register schema from GB10.
+ * H7607BA.300 already provides serialized ACPI methods for live telemetry:
+ * PSYS/PSOC return mW, while the actual thermal zones return decikelvin.
+ * Use those firmware accessors instead of guessing an SPBM MMIO layout.
+ * This backend deliberately exposes no power-limit writes.
+ */
+static const struct dmi_system_id n1x_supported[] = {
+	{
+		.matches = {
+			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "ASUS"),
+			DMI_EXACT_MATCH(DMI_PRODUCT_NAME, "ProArt P16 H7607BA"),
+			DMI_EXACT_MATCH(DMI_BIOS_VERSION, "H7607BA.300"),
+		},
+	},
+	{ }
+};
+
+struct n1x_channel {
+	const char *path;
+	const char *label;
+};
+
+static const struct n1x_channel n1x_power[] = {
+	{ "\\_TZ.PSYS", "sys_total" },
+	{ "\\_TZ.PSOC", "soc_pkg" },
+};
+
+static const struct n1x_channel n1x_temp[] = {
+	{ "\\_TZ.TSOC", "soc" },
+	{ "\\_TZ.TS0E", "cpu_e_clu0" },
+	{ "\\_TZ.TS0P", "cpu_p_clu0" },
+	{ "\\_TZ.TS1E", "cpu_e_clu1" },
+	{ "\\_TZ.TS1P", "cpu_p_clu1" },
+	{ "\\_TZ.TGPU", "gpu" },
+	{ "\\_TZ.TDLA", "dla" },
+	{ "\\_TZ.TUNC", "uncore" },
+};
+
+struct n1x_priv {
+	acpi_handle power[ARRAY_SIZE(n1x_power)];
+	acpi_handle temp[ARRAY_SIZE(n1x_temp)];
+};
+
+static umode_t n1x_visible(const void *data, enum hwmon_sensor_types type,
+			 u32 attr, int ch)
+{
+	const struct n1x_priv *p = data;
+
+	if (type == hwmon_power && ch < ARRAY_SIZE(n1x_power) &&
+	    p->power[ch] && (attr == hwmon_power_input || attr == hwmon_power_label))
+		return 0444;
+	if (type == hwmon_temp && ch < ARRAY_SIZE(n1x_temp) &&
+	    p->temp[ch] && (attr == hwmon_temp_input || attr == hwmon_temp_label))
+		return 0444;
+	return 0;
+}
+
+static int n1x_read(struct device *dev, enum hwmon_sensor_types type,
+		    u32 attr, int ch, long *val)
+{
+	struct n1x_priv *p = dev_get_drvdata(dev);
+	unsigned long long raw;
+	acpi_handle handle;
+
+	if (type == hwmon_power && attr == hwmon_power_input && ch < ARRAY_SIZE(n1x_power))
+		handle = p->power[ch];
+	else if (type == hwmon_temp && attr == hwmon_temp_input && ch < ARRAY_SIZE(n1x_temp))
+		handle = p->temp[ch];
+	else
+		return -EOPNOTSUPP;
+	if (!handle || ACPI_FAILURE(acpi_evaluate_integer(handle, "_TMP", NULL, &raw)))
+		return -EIO;
+	if (type == hwmon_power) {
+		/* Reject firmware sentinels and values outside a laptop's range. */
+		if (raw > 1000000)
+			return -ENODATA;
+		*val = raw * 1000; /* mW -> uW */
+	} else {
+		if (raw < 2000 || raw > 4500)
+			return -ENODATA;
+		*val = deci_kelvin_to_millicelsius(raw);
+	}
+	return 0;
+}
+
+static int n1x_read_string(struct device *dev, enum hwmon_sensor_types type,
+			   u32 attr, int ch, const char **str)
+{
+	if (type == hwmon_power && attr == hwmon_power_label && ch < ARRAY_SIZE(n1x_power))
+		*str = n1x_power[ch].label;
+	else if (type == hwmon_temp && attr == hwmon_temp_label && ch < ARRAY_SIZE(n1x_temp))
+		*str = n1x_temp[ch].label;
+	else
+		return -EOPNOTSUPP;
+	return 0;
+}
+
+static const struct hwmon_ops n1x_ops = {
+	.is_visible = n1x_visible,
+	.read = n1x_read,
+	.read_string = n1x_read_string,
+};
+
+static const struct hwmon_channel_info * const n1x_info[] = {
+	HWMON_CHANNEL_INFO(power, HWMON_P_INPUT | HWMON_P_LABEL,
+			   HWMON_P_INPUT | HWMON_P_LABEL),
+	HWMON_CHANNEL_INFO(temp, HWMON_T_INPUT | HWMON_T_LABEL,
+		HWMON_T_INPUT | HWMON_T_LABEL, HWMON_T_INPUT | HWMON_T_LABEL,
+		HWMON_T_INPUT | HWMON_T_LABEL, HWMON_T_INPUT | HWMON_T_LABEL,
+		HWMON_T_INPUT | HWMON_T_LABEL, HWMON_T_INPUT | HWMON_T_LABEL,
+		HWMON_T_INPUT | HWMON_T_LABEL),
+	NULL
+};
+
+static const struct hwmon_chip_info n1x_chip = {
+	.ops = &n1x_ops,
+	.info = n1x_info,
+};
+
+static int n1x_add(struct acpi_device *adev)
+{
+	struct device *dev = &adev->dev, *hwdev;
+	struct n1x_priv *p;
+	int i, found = 0;
+
+	if (!dmi_check_system(n1x_supported))
+		return -ENODEV;
+	p = devm_kzalloc(dev, sizeof(*p), GFP_KERNEL);
+	if (!p)
+		return -ENOMEM;
+	for (i = 0; i < ARRAY_SIZE(n1x_power); i++) {
+		if (ACPI_SUCCESS(acpi_get_handle(NULL, (acpi_string)n1x_power[i].path,
+					       &p->power[i])) &&
+		    acpi_has_method(p->power[i], "_TMP"))
+			found++;
+		else
+			p->power[i] = NULL;
+	}
+	for (i = 0; i < ARRAY_SIZE(n1x_temp); i++) {
+		if (ACPI_SUCCESS(acpi_get_handle(NULL, (acpi_string)n1x_temp[i].path,
+					       &p->temp[i])) &&
+		    acpi_has_method(p->temp[i], "_TMP"))
+			found++;
+		else
+			p->temp[i] = NULL;
+	}
+	if (!found)
+		return -ENODEV;
+	hwdev = devm_hwmon_device_register_with_info(dev, "spbm_n1x", p, &n1x_chip, NULL);
+	if (IS_ERR(hwdev))
+		return PTR_ERR(hwdev);
+	dev_info(dev, "registered %d read-only N1X ACPI telemetry channels\n", found);
+	return 0;
+}
+
 /* ACPI driver */
 
 static int spbm_add(struct acpi_device *adev)
@@ -510,6 +669,9 @@ static int spbm_add(struct acpi_device *adev)
 	struct spbm_priv *p;
 	struct device *hwdev;
 	int spbm_idx, idx = 0, ret, resolved, i, j;
+
+	if (!strcmp(acpi_device_hid(adev), "NVDA8810"))
+		return n1x_add(adev);
 
 	p = devm_kzalloc(dev, sizeof(*p), GFP_KERNEL);
 	if (!p)
@@ -686,6 +848,7 @@ static int spbm_add(struct acpi_device *adev)
 
 static const struct acpi_device_id spbm_acpi_ids[] = {
 	{ "NVDA8800", 0 },
+	{ "NVDA8810", 0 },
 	{ }
 };
 MODULE_DEVICE_TABLE(acpi, spbm_acpi_ids);
@@ -701,4 +864,4 @@ module_acpi_driver(spbm_driver);
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Antheas Kapenekakis <antheas@cs.aau.dk>");
-MODULE_DESCRIPTION("NVIDIA DGX Spark (GB10) SPBM power hwmon driver");
+MODULE_DESCRIPTION("NVIDIA DGX Spark and ASUS P16 N1X telemetry hwmon driver");
