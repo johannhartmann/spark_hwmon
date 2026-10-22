@@ -19,7 +19,7 @@ class GapEvidenceTests(unittest.TestCase):
         for name in ('affinity-capture', 'cap-experiment', 'bounds-capture', 'status-capture',
                      'package-cap-experiment', 'system-cap-experiment',
                      'system-long-cap-experiment', 'sustained-system-cap-experiment', 'pid-capture',
-                     'final-state-capture'):
+                     'final-state-capture', 'fast-energy-capture'):
             with self.subTest(name=name):
                 data = (DATA / (name + '.jsonl.gz')).read_bytes()
                 expected = manifest[name + '.jsonl.gz']
@@ -123,3 +123,20 @@ class GapEvidenceTests(unittest.TestCase):
             for slot in (0, 1, 4, 5):
                 self.assertEqual(registers[f'0x{0x120 + slot * 4:03x}'],
                                  registers[f'0x{0x160 + slot * 4:03x}'])
+
+    def test_millisecond_polling_observes_batched_energy_updates_and_persistent_bias(self):
+        rows = load('fast-energy-capture')[1:]
+        self.assertEqual(len(rows), 20000)
+        for energy in ('0x344', '0x350', '0x35c', '0x374'):
+            changes = [right['monotonic_s'] for left, right in zip(rows, rows[1:])
+                       if right['registers'][energy] != left['registers'][energy]]
+            self.assertEqual(len(changes), 199)
+            gaps = [right - left for left, right in zip(changes, changes[1:])]
+            self.assertLess(abs(statistics.mean(gaps) - .1005), .001)
+        duration = rows[-1]['monotonic_s'] - rows[0]['monotonic_s']
+        counter_rate = (rows[-1]['registers']['0x350'] - rows[0]['registers']['0x350']) / duration
+        integral = sum((right['monotonic_s'] - left['monotonic_s']) *
+                       (right['registers']['0x310'] + left['registers']['0x310']) / 2
+                       for left, right in zip(rows, rows[1:]))
+        self.assertGreater(counter_rate - integral / duration, 350)
+        self.assertLess(counter_rate - integral / duration, 450)

@@ -51,6 +51,16 @@ power during E load. This corroborates the disagreement, not an exact correction
 or an identical N1X firmware algorithm. Keep firmware energy and instantaneous
 power as separate measurements; do not silently manufacture agreement.
 
+A further read-only 20-second experiment polled the eight power/energy words at
+1 ms intervals (`fast-energy-capture.jsonl.gz`, 20,000 samples). Each of the four
+energy counters changed only 199 times, with mean visible update spacing of
+100.525 ms. E counter-derived power was 0.567 W versus 0.157 W integrated from
+`0x310`, a 0.410 W difference. Faster userspace polling therefore does not remove
+the disagreement or reveal the firmware's internal integration samples. The
+visible interface is updated in batches; its internal sampling/rounding formula
+is still not established. `tools/capture-n1x-energy-fast.py` reproduces this
+passive cadence measurement without launching a workload or writing controls.
+
 ## Register identities and status
 
 A [published DGX firmware dump](https://github.com/aien-dev/omega-mv/blob/a8ffd2b912c84197d08f963b05f9c7d8b30a3f8a/research/m15/spbm/runs/preflight-20260928-03/DSDT.dat)

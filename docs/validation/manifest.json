@@ -58,5 +58,10 @@
     "samples": 10,
     "sha256_gzip": "f456c3601b33f3e0b6b55ff19563cccb0fdac4244bbd7a1b62130e14a57ae030",
     "sha256_jsonl": "50277dfad7dec30beeae39823e646034ee074ac9dfd672d8f8c541a802899993"
+  },
+  "fast-energy-capture.jsonl.gz": {
+    "samples": 20000,
+    "sha256_gzip": "8f44ba766bae0d429ddb71cf3820cf3855ac5604a981626e02530ef248bdee48",
+    "sha256_jsonl": "49be5a03cdb49eda032460ce168dd95995d40557a1ca456d8204d51e91c4b481"
   }
 }
