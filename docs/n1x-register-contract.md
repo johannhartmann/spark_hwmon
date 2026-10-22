@@ -5,7 +5,7 @@ backend exposes two power readings and eight temperatures on the validated ASUS
 firmware. The directory returned by MTEL does not describe the missing sensor
 registers. Hardware sharing a silicon design does not establish a firmware ABI.
 
-The matching Windows vendor driver has now been obtained; see [Windows vendor driver evidence](windows-vendor-drivers.md) for the exact NVDA8810/NVDA8800 driver, versions, hashes and the NVPCF shared-memory access implementation. The observations below describe the initial firmware inspection.
+The matching Windows vendor driver has now been obtained; see [Windows vendor driver evidence](windows-vendor-drivers.md) for the exact NVDA8810/NVDA8800 driver, versions, hashes and the NVPCF shared-memory access implementation. The observations below describe the initial firmware inspection; [the subsequent extraction and validation report](validation/README.md) establishes the CPUEB aliases, relative/absolute mappings and measured power/counter relationships.
 
 ## Firmware evidence
 

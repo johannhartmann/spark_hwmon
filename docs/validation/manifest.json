@@ -1,0 +1,12 @@
+{
+  "load-capture.jsonl.gz": {
+    "samples": 550,
+    "sha256_gzip": "74947c2d93d704c2372d6529628b2d1160ec1240305be719e4e5639ca943c2a3",
+    "sha256_jsonl": "85f360957e113d9dc31163a9bfb92934faa6a9eabc0ec4e3ecd895b29f10c300"
+  },
+  "legacy-load-capture.jsonl.gz": {
+    "samples": 550,
+    "sha256_gzip": "c4849166dbc3109d06ad39fed53595b943931f400cfbc559a292f42d10e4a0e5",
+    "sha256_jsonl": "1afd6c7c7649d576de877415b02b15b93089bbb20c28b77bb61c7b6c7f1724e4"
+  }
+}

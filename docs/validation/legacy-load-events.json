@@ -1,0 +1,27 @@
+{
+  "events": [
+    {
+      "phase": "idle",
+      "monotonic": 14938.64679453
+    },
+    {
+      "phase": "cpu",
+      "monotonic": 14943.647233182
+    },
+    {
+      "phase": "recovery",
+      "monotonic": 14955.672068417
+    },
+    {
+      "phase": "gpu",
+      "monotonic": 14960.672518224
+    },
+    {
+      "phase": "cooldown",
+      "monotonic": 14973.240747042
+    }
+  ],
+  "gpu_requests": 6,
+  "gpu_completion_tokens": 768,
+  "cpu_processes": 8
+}

@@ -33,6 +33,8 @@ For the confirmed firmware addresses and the unresolved requirements for full DG
 
 The matching Windows ARM64 MTEL driver has been extracted from ASUS recovery media. [Vendor-driver evidence and extraction instructions](docs/windows-vendor-drivers.md) include its NVDA8810/NVDA8800 bindings and NVPCF shared-memory routines.
 
+[Reverse-engineering validation](docs/validation/README.md) now includes original Windows-helper execution in an ARM64 emulator, all seven CPUEB table mappings, 1,100 read-only hardware samples under CPU/CUDA loads, and reproducible raw captures. These findings do not add channels or controls to the installed Linux backend.
+
 ### Validation
 
 | Machine | BIOS | Kernel | Result |

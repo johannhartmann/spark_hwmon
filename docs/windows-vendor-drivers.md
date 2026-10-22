@@ -10,6 +10,8 @@ inspection and ARM64 disassembly were performed. Vendor binaries remain outside
 this repository. SHA-256 values below identify the acquired bytes; they are not
 claims that Authenticode signatures have been independently verified.
 
+The extracted contract, original-code emulator tests and two read-only hardware campaigns are documented in [the validation report](validation/README.md). The generated [contract JSON](vendor-contract.json) includes all register, CPUEB and IOCTL directory records.
+
 ## Confirmed packages and files
 
 ### MediaTek/NVIDIA MTEL driver: the direct match
@@ -149,6 +151,6 @@ The inspector reports hashes, file versions, PDB identities, GUID matches,
 imports and optionally a bounded disassembly. It opens files as data and never
 loads their code. RVAs and extraction paths above are version-specific.
 
-The remaining work is to trace the MTEL driver and the NVPCF callers, establish
-field semantics and firmware-control behavior, and validate reads before adding
-hwmon channels or writes. The Linux backend was not changed during this search.
+Further extraction and read-only load validation are recorded in the linked
+validation report. Exact control semantics, several field definitions and
+long-duration behavior remain open. The installed Linux backend was not replaced.

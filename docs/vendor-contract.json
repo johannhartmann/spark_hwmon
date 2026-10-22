@@ -1,0 +1,327 @@
+{
+  "nvpcf_sha256": "530ea7f04474a1a95ba71d8397bbc3b48b210dd58fd7b7892256c705e1c36ef0",
+  "mtel_sha256": "7028cd64cdcced2382181cf29c7f9f6f21abf192412870c0e866d8e137cefced",
+  "physical_base": 472088576,
+  "requested_mapping_bytes": 2068,
+  "offset_table_rva": 253040,
+  "registers": [
+    {
+      "index": 0,
+      "offset": 256
+    },
+    {
+      "index": 1,
+      "offset": 260
+    },
+    {
+      "index": 2,
+      "offset": 264
+    },
+    {
+      "index": 3,
+      "offset": 268
+    },
+    {
+      "index": 4,
+      "offset": 272
+    },
+    {
+      "index": 5,
+      "offset": 276
+    },
+    {
+      "index": 6,
+      "offset": 280
+    },
+    {
+      "index": 7,
+      "offset": 284
+    },
+    {
+      "index": 8,
+      "offset": 288
+    },
+    {
+      "index": 9,
+      "offset": 292
+    },
+    {
+      "index": 10,
+      "offset": 296
+    },
+    {
+      "index": 11,
+      "offset": 300
+    },
+    {
+      "index": 12,
+      "offset": 304
+    },
+    {
+      "index": 13,
+      "offset": 308
+    },
+    {
+      "index": 14,
+      "offset": 312
+    },
+    {
+      "index": 15,
+      "offset": 316
+    },
+    {
+      "index": 16,
+      "offset": 320
+    },
+    {
+      "index": 17,
+      "offset": 324
+    },
+    {
+      "index": 18,
+      "offset": 328
+    },
+    {
+      "index": 19,
+      "offset": 332
+    },
+    {
+      "index": 20,
+      "offset": 336
+    },
+    {
+      "index": 21,
+      "offset": 340
+    },
+    {
+      "index": 22,
+      "offset": 344
+    },
+    {
+      "index": 23,
+      "offset": 348
+    },
+    {
+      "index": 24,
+      "offset": 352
+    },
+    {
+      "index": 25,
+      "offset": 356
+    },
+    {
+      "index": 26,
+      "offset": 360
+    },
+    {
+      "index": 27,
+      "offset": 364
+    },
+    {
+      "index": 28,
+      "offset": 368
+    },
+    {
+      "index": 29,
+      "offset": 372
+    },
+    {
+      "index": 30,
+      "offset": 376
+    },
+    {
+      "index": 31,
+      "offset": 380
+    },
+    {
+      "index": 32,
+      "offset": 2048
+    },
+    {
+      "index": 33,
+      "offset": 2060
+    },
+    {
+      "index": 34,
+      "offset": 2052
+    },
+    {
+      "index": 35,
+      "offset": 2064
+    },
+    {
+      "index": 36,
+      "offset": 56
+    },
+    {
+      "index": 37,
+      "offset": 2056
+    },
+    {
+      "index": 38,
+      "offset": 2068
+    },
+    {
+      "index": 39,
+      "offset": 780
+    },
+    {
+      "index": 40,
+      "offset": 784
+    },
+    {
+      "index": 41,
+      "offset": 804
+    },
+    {
+      "index": 42,
+      "offset": 908
+    },
+    {
+      "index": 43,
+      "offset": 836
+    },
+    {
+      "index": 44,
+      "offset": 896
+    },
+    {
+      "index": 45,
+      "offset": 860
+    },
+    {
+      "index": 46,
+      "offset": 848
+    },
+    {
+      "index": 47,
+      "offset": 884
+    }
+  ],
+  "mtel_guid": "12345678-1234-1234-1234-123456789abc",
+  "mtel_device_interface_guid": "41a92821-d71e-4d9d-979c-fcb82d9158d8",
+  "mtel_ioctl_record_rva": 210720,
+  "mtel_ioctls": [
+    {
+      "code": 2236420,
+      "minimum_input_bytes": 12,
+      "minimum_output_bytes": 0,
+      "callback_rva": 34096,
+      "per_ioctl_administrator_flag": false
+    },
+    {
+      "code": 2236424,
+      "minimum_input_bytes": 16,
+      "minimum_output_bytes": 0,
+      "callback_rva": 34928,
+      "per_ioctl_administrator_flag": false
+    },
+    {
+      "code": 2236428,
+      "minimum_input_bytes": 4,
+      "minimum_output_bytes": 12,
+      "callback_rva": 35792,
+      "per_ioctl_administrator_flag": false
+    },
+    {
+      "code": 2236432,
+      "minimum_input_bytes": 0,
+      "minimum_output_bytes": 16,
+      "callback_rva": 36512,
+      "per_ioctl_administrator_flag": false
+    }
+  ],
+  "nvpcf_raw_parameter_records": [
+    [
+      20490,
+      5,
+      15000
+    ],
+    [
+      20491,
+      5,
+      15000
+    ],
+    [
+      20492,
+      5,
+      20000
+    ],
+    [
+      20493,
+      5,
+      20000
+    ],
+    [
+      20481,
+      4,
+      10000
+    ],
+    [
+      20482,
+      4,
+      10000
+    ],
+    [
+      20483,
+      4,
+      0
+    ],
+    [
+      20484,
+      4,
+      0
+    ]
+  ],
+  "cpueb_tables": [
+    {
+      "key": "CFL",
+      "alias": "CPUEB_FASTDVFS_LOG_OFFSET",
+      "context_offset": 920,
+      "mapping_pointer_offset": 1096,
+      "mapping_bytes": 2048
+    },
+    {
+      "key": "CPL",
+      "alias": "CPUEB_PERFCNT_LOG_OFFSET",
+      "context_offset": 924,
+      "mapping_pointer_offset": 1104,
+      "mapping_bytes": 1024
+    },
+    {
+      "key": "CBL",
+      "alias": "CPUEB_BPT_LOG_OFFSET",
+      "context_offset": 928,
+      "mapping_pointer_offset": 1112,
+      "mapping_bytes": 1024
+    },
+    {
+      "key": "CCI",
+      "alias": "CPUEB_CPPC_INTERFACE_OFFSET",
+      "context_offset": 932,
+      "mapping_pointer_offset": 1120,
+      "mapping_bytes": 4096
+    },
+    {
+      "key": "CPI",
+      "alias": "CPUEB_PL_INTERFACE_OFFSET",
+      "context_offset": 936,
+      "mapping_pointer_offset": 1128,
+      "mapping_bytes": 4096
+    },
+    {
+      "key": "CTS0",
+      "alias": "CPUEB_TJPID_SLAVE0_OFFSET",
+      "context_offset": 940,
+      "mapping_pointer_offset": 1136,
+      "mapping_bytes": 1024
+    },
+    {
+      "key": "CTS1",
+      "alias": "CPUEB_TJPID_SLAVE1_OFFSET",
+      "context_offset": 944,
+      "mapping_pointer_offset": 1144,
+      "mapping_bytes": 1024
+    }
+  ]
+}
