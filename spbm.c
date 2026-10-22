@@ -864,4 +864,4 @@ module_acpi_driver(spbm_driver);
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Antheas Kapenekakis <antheas@cs.aau.dk>");
-MODULE_DESCRIPTION("NVIDIA DGX Spark and ASUS P16 N1X telemetry hwmon driver");
+MODULE_DESCRIPTION("NVIDIA DGX Spark and RTX Spark N1X telemetry hwmon driver");

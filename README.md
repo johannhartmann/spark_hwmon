@@ -1,6 +1,8 @@
-# SPBM — DGX Spark and ASUS P16 N1X telemetry
+# SPBM — DGX Spark and RTX Spark telemetry
 
-## ASUS ProArt P16 H7607BA support
+## RTX Spark (N1X) support
+
+The RTX Spark backend is named for the platform family; its current validation and DMI guard remain specific to the P16 firmware below. Additional machines require validation before their IDs are enabled.
 
 This fork adds a **read-only** N1X backend for `NVDA8810` on the ASUS ProArt P16 H7607BA with BIOS **H7607BA.300**. Other N1X machines and BIOS versions are not enabled. The original DGX Spark `NVDA8800` backend is unchanged.
 
@@ -19,11 +21,11 @@ Validated on kernel `7.2.8-23-omarchy-p16-asus`: ten channels appear under `spbm
 ### Install this fork with DKMS
 
 ```sh
-sudo install -d /usr/src/spbm-0.3.0.p16.1
-sudo install -m644 spbm.c Makefile dkms.conf /usr/src/spbm-0.3.0.p16.1/
-sudo dkms add -m spbm -v 0.3.0.p16.1
-sudo dkms build -m spbm -v 0.3.0.p16.1 -k "$(uname -r)"
-sudo dkms install -m spbm -v 0.3.0.p16.1 -k "$(uname -r)"
+sudo install -d /usr/src/spbm-0.3.0.rtxspark.1
+sudo install -m644 spbm.c Makefile dkms.conf /usr/src/spbm-0.3.0.rtxspark.1/
+sudo dkms add -m spbm -v 0.3.0.rtxspark.1
+sudo dkms build -m spbm -v 0.3.0.rtxspark.1 -k "$(uname -r)"
+sudo dkms install -m spbm -v 0.3.0.rtxspark.1 -k "$(uname -r)"
 sudo modprobe spbm
 sensors spbm_n1x-*
 ```
@@ -149,8 +151,8 @@ watch -n 0.1 sensors 'spbm-*'
 ```bash
 sudo apt install dkms
 sudo dkms add .
-sudo dkms build spbm/0.3.0.p16.1
-sudo dkms install spbm/0.3.0.p16.1
+sudo dkms build spbm/0.3.0.rtxspark.1
+sudo dkms install spbm/0.3.0.rtxspark.1
 ```
 
 The module auto-loads at boot via ACPI modalias matching (`NVDA8800`).
