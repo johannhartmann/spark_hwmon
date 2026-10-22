@@ -29,6 +29,8 @@ Individual sensors are discovered independently. Missing optional sensors are hi
 
 This driver only reports telemetry. It does not repair thermal trip points, unregister firmware power zones from the thermal subsystem, control fans, expose power-limit writes, or supply missing GPU/CPU power subdivisions.
 
+For the confirmed firmware addresses and the unresolved requirements for full DGX feature parity, see [the N1X register contract](docs/n1x-register-contract.md). Full power-rail, energy-counter and power-limit support is not implemented for NVDA8810.
+
 ### Validation
 
 | Machine | BIOS | Kernel | Result |
