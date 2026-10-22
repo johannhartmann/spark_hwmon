@@ -1,6 +1,6 @@
 # N1X register contract: confirmed interface and remaining gaps
 
-Version `0.3.0.rtxspark.4` integrates the validated H7607BA.300 MMIO backend:
+Version `0.3.0.rtxspark.5` integrates the validated H7607BA.300 MMIO backend:
 15 power readings, eight ACPI temperatures, four reduction-only power controls,
 and unmodified raw status, energy and diagnostic words. Other matching N1X
 systems retain ACPI sensor discovery; the MMIO extension is firmware-gated.
@@ -115,5 +115,5 @@ restore it without repeating the workloads.
 
 During the initial read-only investigation the installed module was
 `0.3.0.rtxspark.3` with ten channels and no controls. That historical result is
-superseded for the validated P16 by the `.4` implementation described above;
+superseded for the validated P16 by the `.5` implementation described above;
 new runtime evidence is kept in `validation/n1x-mmio-integration.md`.

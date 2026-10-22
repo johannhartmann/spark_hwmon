@@ -241,7 +241,7 @@ sample labels; the capture tool never launches workloads or writes device state.
   recognizer accepts the five short keys; the Windows aliases are extracted and
   tested here but have not been added to the installed Linux driver.
 
-These experiments used the original read-only Linux backend; version `.4`
+These experiments used the original read-only Linux backend; version `.5`
 now integrates the confirmed contract (see [integration](n1x-mmio-integration.md)). These results
 are a tested basis for further implementation, not a claim of full DGX feature
 parity or universal RTX Spark hardware validation.

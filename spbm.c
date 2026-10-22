@@ -668,7 +668,7 @@ static int n1x_add(struct acpi_device *adev)
 		return dev_err_probe(dev, -ENODEV, "no supported RTX Spark sensors found\n");
 	mutex_init(&p->lock);
 	if (power_units_known) {
-		i = n1x_mmio_init(dev, p);
+		i = n1x_mmio_init(dev, p, adev->handle);
 		if (i)
 			return i;
 	}
@@ -886,6 +886,6 @@ static struct acpi_driver spbm_driver = {
 module_acpi_driver(spbm_driver);
 
 MODULE_LICENSE("GPL");
-MODULE_VERSION("0.3.0.rtxspark.4");
+MODULE_VERSION("0.3.0.rtxspark.5");
 MODULE_AUTHOR("Antheas Kapenekakis <antheas@cs.aau.dk>");
 MODULE_DESCRIPTION("NVIDIA DGX Spark and RTX Spark N1X telemetry hwmon driver");

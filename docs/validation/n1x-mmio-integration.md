@@ -1,6 +1,6 @@
 # Native N1X backend integration
 
-Version `0.3.0.rtxspark.4` implements the contracts established by the recorded
+Version `0.3.0.rtxspark.5` implements the contracts established by the recorded
 load experiments and original Windows-reader execution. Scope is ASUS ProArt
 P16 H7607BA, BIOS H7607BA.300; the general N1X ACPI fallback remains available.
 

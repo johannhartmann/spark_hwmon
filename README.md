@@ -2,7 +2,7 @@
 
 ## RTX Spark (N1X) support
 
-Version `0.3.0.rtxspark.4` integrates the validated P16 register backend. The
+Version `0.3.0.rtxspark.5` integrates the validated P16 register backend. The
 ASUS ProArt P16 H7607BA with BIOS H7607BA.300 exposes **15 power readings, eight
 temperatures, four power-limit controls and raw status/energy/diagnostic words**.
 The original DGX `NVDA8800` backend remains separate.

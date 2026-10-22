@@ -27,6 +27,8 @@ static void mutex_lock(struct mutex *m) { assert(!m->locked); m->locked = true; 
 static void mutex_unlock(struct mutex *m) { assert(m->locked); m->locked = false; }
 struct n1x_priv { void *base; struct mutex lock; u32 owned[4]; unsigned long owned_mask; };
 struct device { struct n1x_priv *data; };
+typedef void *acpi_handle;
+static int acpi_object;
 static void *dev_get_drvdata(struct device *d) { return d->data; }
 static u32 memory[1024];
 static u32 ioread32(void *p) { return *(u32 *)p; }
@@ -40,9 +42,8 @@ struct sensor_device_attribute { struct device_attribute dev_attr; int index; };
 struct attribute_group { struct attribute **attrs; };
 #define sysfs_emit(buf,fmt,...) snprintf(buf,4096,fmt,__VA_ARGS__)
 #define ACPI_FAILURE(s) ((s) != 0)
-#define ACPI_HANDLE(dev) (dev)
-static int acpi_evaluate_integer(struct device *d, const char *n, void *a, unsigned long long *v)
-{ (void)d; (void)n; (void)a; *v = 2; return 0; }
+static int acpi_evaluate_integer(acpi_handle d, const char *n, void *a, unsigned long long *v)
+{ (void)n; (void)a; if (d != &acpi_object) return 1; *v = 2; return 0; }
 #define dev_err_probe(dev,err,fmt) ((void)(dev), (void)(fmt), (err))
 #define devm_ioremap(dev,addr,size) ((void)(dev), (void)(addr), (void)(size), memory)
 static int devm_add_action_or_reset(struct device *d, void (*action)(void *), void *data)
@@ -65,7 +66,8 @@ int main(void)
         memory[0x160 / 4 + slot] = memory[0x120 / 4 + slot];
     }
     memory[0x818 / 4] = 3300;
-    assert(n1x_mmio_init(&dev, &p) == 0);
+    assert(n1x_mmio_init(&dev, &p, NULL) == -ENODEV);
+    assert(n1x_mmio_init(&dev, &p, &acpi_object) == 0);
     for (i = 0; i < 4; i++) {
         int ch = 2 + N1X_FIRST_LIMIT + i;
         u32 slot = n1x_limit_slots[i];
@@ -91,7 +93,7 @@ int main(void)
     n1x_reset_owned(&p);
     assert(memory[0x100 / 4] == 0 && memory[0x104 / 4] == 40000);
     memory[0x708 / 4] = 0; /* Firmware sentinels/invalid bounds reject probe. */
-    assert(n1x_mmio_init(&dev, &p) == -ENODEV);
+    assert(n1x_mmio_init(&dev, &p, &acpi_object) == -ENODEV);
     p.base = NULL;
     assert(n1x_mmio_visible(&p, hwmon_power_cap, N1X_FIRST_LIMIT) == 0);
     assert(n1x_mmio_write(&dev, hwmon_power, hwmon_power_cap, 11, 35000000) == -EOPNOTSUPP);

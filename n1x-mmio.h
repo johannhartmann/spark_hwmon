@@ -180,14 +180,14 @@ static struct attribute *n1x_raw_attrs[] = {
 static const struct attribute_group n1x_raw_group = { .attrs = n1x_raw_attrs };
 static const struct attribute_group *n1x_raw_groups[] = { &n1x_raw_group, NULL };
 
-static int n1x_mmio_init(struct device *dev, struct n1x_priv *p)
+static int n1x_mmio_init(struct device *dev, struct n1x_priv *p, acpi_handle handle)
 {
 	unsigned long long platform;
 	u32 low, high, ec, effective;
 	int i;
 
 	/* Caller has checked exact model/BIOS and the recognized MTEL schema. */
-	if (ACPI_FAILURE(acpi_evaluate_integer(ACPI_HANDLE(dev), "PLID", NULL, &platform)) ||
+	if (ACPI_FAILURE(acpi_evaluate_integer(handle, "PLID", NULL, &platform)) ||
 	    platform != 2)
 		return dev_err_probe(dev, -ENODEV, "unvalidated N1X platform ID\n");
 	p->base = devm_ioremap(dev, 0x1c238000, SPBM_SIZE);
