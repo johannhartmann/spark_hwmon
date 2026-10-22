@@ -35,6 +35,7 @@
 #include <linux/list.h>
 #include <linux/uuid.h>
 #include <linux/units.h>
+#include <linux/dmi.h>
 
 #define DRIVER_NAME	"spbm"
 #define SPBM_SIZE	0x1000
@@ -500,55 +501,19 @@ static int spbm_dsm_resolve_offsets(struct device *dev, acpi_handle handle,
 	return resolved;
 }
 
+#include "n1x-acpi.h"
 
-/*
- * RTX Spark NVDA8810 uses the flat MTEL resource-directory ABI, unlike
- * GB10's named sensor-offset ABI. Recognize that ABI before evaluating
- * optional thermal-zone accessors. Never reuse DGX offsets or map MMIO.
- */
-static bool n1x_supported_schema(acpi_handle handle)
-{
-	static const char * const keys[] = { "CFL", "CPL", "CBL", "CCI", "CPI" };
-	union acpi_object arg_elem = { .integer = { .type = ACPI_TYPE_INTEGER } };
-	union acpi_object arg_pkg = { .package = {
-		.type = ACPI_TYPE_PACKAGE, .count = 1, .elements = &arg_elem,
-	} };
-	union acpi_object *out;
-	unsigned long seen = 0;
-	int resource, i, j;
-	bool valid = false;
-
-	if (!acpi_check_dsm(handle, &mtel_dsm_guid, 0, BIT(1) | BIT(2)))
-		return false;
-	resource = spbm_dsm_find_resource(handle, "SPBM");
-	if (resource < 0)
-		return false;
-	arg_elem.integer.value = resource;
-	out = acpi_evaluate_dsm(handle, &mtel_dsm_guid, 0, 2, &arg_pkg);
-	if (!out)
-		return false;
-	if (out->type != ACPI_TYPE_PACKAGE || out->package.count % 2)
-		goto done;
-	for (i = 0; i < out->package.count; i += 2) {
-		union acpi_object *name = &out->package.elements[i];
-		union acpi_object *offset = &out->package.elements[i + 1];
-
-		if (name->type != ACPI_TYPE_STRING || offset->type != ACPI_TYPE_INTEGER ||
-		    offset->integer.value > U32_MAX || offset->integer.value % 4)
-			goto done;
-		for (j = 0; j < ARRAY_SIZE(keys); j++) {
-			if (strcmp(name->string.pointer, keys[j]))
-				continue;
-			if (seen & BIT(j))
-				goto done;
-			seen |= BIT(j);
-		}
-	}
-	valid = seen == GENMASK(ARRAY_SIZE(keys) - 1, 0);
-done:
-	ACPI_FREE(out);
-	return valid;
-}
+/* Only power-unit interpretation needs a validated firmware quirk. */
+static const struct dmi_system_id n1x_power_units[] = {
+	{
+		.matches = {
+			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "ASUS"),
+			DMI_EXACT_MATCH(DMI_PRODUCT_NAME, "ProArt P16 H7607BA"),
+			DMI_EXACT_MATCH(DMI_BIOS_VERSION, "H7607BA.300"),
+		},
+	},
+	{ }
+};
 
 struct n1x_channel {
 	const char *path;
@@ -652,33 +617,13 @@ static const struct hwmon_chip_info n1x_chip = {
 	.info = n1x_info,
 };
 
-/* Discover only thermal-zone objects, never arbitrary similarly named devices. */
-static acpi_handle n1x_find_sensor(const char *path, bool power)
-{
-	acpi_handle handle;
-	acpi_object_type type;
-	unsigned long long critical;
-
-	if (ACPI_FAILURE(acpi_get_handle(NULL, (acpi_string)path, &handle)) ||
-	    ACPI_FAILURE(acpi_get_type(handle, &type)) || type != ACPI_TYPE_THERMAL ||
-	    !acpi_has_method(handle, "_TMP"))
-		return NULL;
-	/*
-	 * In this MTEL ABI, PSYS/PSOC are mW telemetry disguised as thermal
-	 * zones. Require their no-thermal-trip sentinel before using that
-	 * nonstandard unit contract. A real thermal zone must not become power.
-	 */
-	if (power && (ACPI_FAILURE(acpi_evaluate_integer(handle, "_CRT", NULL, &critical)) ||
-		      critical != 0x7fffffff))
-		return NULL;
-	return handle;
-}
 
 static int n1x_add(struct acpi_device *adev)
 {
 	struct device *dev = &adev->dev, *hwdev;
 	struct n1x_priv *p;
 	int i, power = 0, temp = 0;
+	bool power_units_known = dmi_check_system(n1x_power_units);
 
 	if (!n1x_supported_schema(adev->handle))
 		return dev_err_probe(dev, -ENODEV, "unsupported RTX Spark MTEL schema\n");
@@ -686,12 +631,12 @@ static int n1x_add(struct acpi_device *adev)
 	if (!p)
 		return -ENOMEM;
 	for (i = 0; i < ARRAY_SIZE(n1x_power); i++) {
-		p->power[i] = n1x_find_sensor(n1x_power[i].path, true);
+		p->power[i] = n1x_find_sensor(n1x_power[i].path, true, power_units_known);
 		if (p->power[i])
 			power++;
 	}
 	for (i = 0; i < ARRAY_SIZE(n1x_temp); i++) {
-		p->temp[i] = n1x_find_sensor(n1x_temp[i].path, false);
+		p->temp[i] = n1x_find_sensor(n1x_temp[i].path, false, power_units_known);
 		if (p->temp[i])
 			temp++;
 	}
@@ -909,5 +854,6 @@ static struct acpi_driver spbm_driver = {
 module_acpi_driver(spbm_driver);
 
 MODULE_LICENSE("GPL");
+MODULE_VERSION("0.3.0.rtxspark.3");
 MODULE_AUTHOR("Antheas Kapenekakis <antheas@cs.aau.dk>");
 MODULE_DESCRIPTION("NVIDIA DGX Spark and RTX Spark N1X telemetry hwmon driver");
