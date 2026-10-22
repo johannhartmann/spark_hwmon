@@ -5,6 +5,8 @@ backend exposes two power readings and eight temperatures on the validated ASUS
 firmware. The directory returned by MTEL does not describe the missing sensor
 registers. Hardware sharing a silicon design does not establish a firmware ABI.
 
+The matching Windows vendor driver has now been obtained; see [Windows vendor driver evidence](windows-vendor-drivers.md) for the exact NVDA8810/NVDA8800 driver, versions, hashes and the NVPCF shared-memory access implementation. The observations below describe the initial firmware inspection.
+
 ## Firmware evidence
 
 Examined platform: ASUS ProArt P16 H7607BA, BIOS H7607BA.300, ACPI device
@@ -89,16 +91,19 @@ based on proximity to the known fields. All these thermal zones use the same
 | Junction maximum | Definition and unit; a critical-trip sentinel cannot substitute for it |
 | PL1 / PL2 / SYSPL1 / SYSPL2 | OS request and effective-value fields, bounds, ownership, firmware notification and acknowledgement, timeout and reset behavior |
 
-The next necessary input is the N1X MTEL/SPBM firmware interface specification,
-or a matching vendor implementation that reveals those structures and the
-command protocol. It can then be checked against read-only captures under
-controlled CPU and GPU loads before implementing controls. The public DGX driver,
-the currently published ASUS driver list and the local NVIDIA open GPU kernel
-sources did not supply this N1X contract during this investigation.
+The matching vendor implementation is now available: `nvMeTelemetryKMD.sys`
+2.2.0.0 explicitly binds both MTEL hardware IDs, and `nvpcf.sys` 32.0.16.1679
+contains shared-memory read, write and update routines. See the linked Windows
+analysis for reproducible evidence. Their callers and field semantics still
+need to be traced and checked against read-only captures under controlled CPU
+and GPU loads before implementing controls.
 
 Do not substitute the old DGX offsets, infer a common displacement from the two
 known power readings, calculate software energy and present it as a firmware
-counter, or enable the DGX `UPDATE_SPBM` write at offset zero on NVDA8810.
+counter, or enable power-limit writes before validating their N1X contract.
+The Windows NVPCF implementation does contain an update store of 1 at the mapped
+base; that establishes a vendor implementation to analyze, not validation of
+all control fields, bounds or acknowledgement behavior.
 
 ## Sources and verification
 

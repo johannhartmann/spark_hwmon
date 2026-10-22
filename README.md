@@ -31,6 +31,8 @@ This driver only reports telemetry. It does not repair thermal trip points, unre
 
 For the confirmed firmware addresses and the unresolved requirements for full DGX feature parity, see [the N1X register contract](docs/n1x-register-contract.md). Full power-rail, energy-counter and power-limit support is not implemented for NVDA8810.
 
+The matching Windows ARM64 MTEL driver has been extracted from ASUS recovery media. [Vendor-driver evidence and extraction instructions](docs/windows-vendor-drivers.md) include its NVDA8810/NVDA8800 bindings and NVPCF shared-memory routines.
+
 ### Validation
 
 | Machine | BIOS | Kernel | Result |
