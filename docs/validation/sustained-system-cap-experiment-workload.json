@@ -1,0 +1,18 @@
+{
+  "start_monotonic": 19493.333339164,
+  "end_monotonic": 19598.769563389,
+  "p_cpus": [
+    5,
+    6,
+    7,
+    8,
+    9,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "gpu_requests": 35,
+  "completion_tokens": 4480
+}

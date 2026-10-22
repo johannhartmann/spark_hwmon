@@ -1,0 +1,270 @@
+{
+  "topology": {
+    "e": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      10,
+      11,
+      12,
+      13,
+      14
+    ],
+    "p": [
+      5,
+      6,
+      7,
+      8,
+      9,
+      15,
+      16,
+      17,
+      18,
+      19
+    ]
+  },
+  "events": [
+    {
+      "phase": "idle",
+      "monotonic": 17857.356159334
+    },
+    {
+      "phase": "e",
+      "monotonic": 17869.502066955
+    },
+    {
+      "phase": "recovery_e",
+      "monotonic": 17889.619690056
+    },
+    {
+      "phase": "p",
+      "monotonic": 17901.687668507
+    },
+    {
+      "phase": "recovery_p",
+      "monotonic": 17921.919668851
+    },
+    {
+      "phase": "e_repeat",
+      "monotonic": 17934.038277347
+    },
+    {
+      "phase": "cooldown",
+      "monotonic": 17954.154642156
+    }
+  ],
+  "workers": [
+    {
+      "phase": "e",
+      "cpu": 0,
+      "affinity": [
+        0
+      ]
+    },
+    {
+      "phase": "e",
+      "cpu": 1,
+      "affinity": [
+        1
+      ]
+    },
+    {
+      "phase": "e",
+      "cpu": 2,
+      "affinity": [
+        2
+      ]
+    },
+    {
+      "phase": "e",
+      "cpu": 3,
+      "affinity": [
+        3
+      ]
+    },
+    {
+      "phase": "e",
+      "cpu": 4,
+      "affinity": [
+        4
+      ]
+    },
+    {
+      "phase": "e",
+      "cpu": 10,
+      "affinity": [
+        10
+      ]
+    },
+    {
+      "phase": "e",
+      "cpu": 11,
+      "affinity": [
+        11
+      ]
+    },
+    {
+      "phase": "e",
+      "cpu": 12,
+      "affinity": [
+        12
+      ]
+    },
+    {
+      "phase": "e",
+      "cpu": 13,
+      "affinity": [
+        13
+      ]
+    },
+    {
+      "phase": "e",
+      "cpu": 14,
+      "affinity": [
+        14
+      ]
+    },
+    {
+      "phase": "p",
+      "cpu": 5,
+      "affinity": [
+        5
+      ]
+    },
+    {
+      "phase": "p",
+      "cpu": 6,
+      "affinity": [
+        6
+      ]
+    },
+    {
+      "phase": "p",
+      "cpu": 7,
+      "affinity": [
+        7
+      ]
+    },
+    {
+      "phase": "p",
+      "cpu": 8,
+      "affinity": [
+        8
+      ]
+    },
+    {
+      "phase": "p",
+      "cpu": 9,
+      "affinity": [
+        9
+      ]
+    },
+    {
+      "phase": "p",
+      "cpu": 15,
+      "affinity": [
+        15
+      ]
+    },
+    {
+      "phase": "p",
+      "cpu": 16,
+      "affinity": [
+        16
+      ]
+    },
+    {
+      "phase": "p",
+      "cpu": 17,
+      "affinity": [
+        17
+      ]
+    },
+    {
+      "phase": "p",
+      "cpu": 18,
+      "affinity": [
+        18
+      ]
+    },
+    {
+      "phase": "p",
+      "cpu": 19,
+      "affinity": [
+        19
+      ]
+    },
+    {
+      "phase": "e_repeat",
+      "cpu": 0,
+      "affinity": [
+        0
+      ]
+    },
+    {
+      "phase": "e_repeat",
+      "cpu": 1,
+      "affinity": [
+        1
+      ]
+    },
+    {
+      "phase": "e_repeat",
+      "cpu": 2,
+      "affinity": [
+        2
+      ]
+    },
+    {
+      "phase": "e_repeat",
+      "cpu": 3,
+      "affinity": [
+        3
+      ]
+    },
+    {
+      "phase": "e_repeat",
+      "cpu": 4,
+      "affinity": [
+        4
+      ]
+    },
+    {
+      "phase": "e_repeat",
+      "cpu": 10,
+      "affinity": [
+        10
+      ]
+    },
+    {
+      "phase": "e_repeat",
+      "cpu": 11,
+      "affinity": [
+        11
+      ]
+    },
+    {
+      "phase": "e_repeat",
+      "cpu": 12,
+      "affinity": [
+        12
+      ]
+    },
+    {
+      "phase": "e_repeat",
+      "cpu": 13,
+      "affinity": [
+        13
+      ]
+    },
+    {
+      "phase": "e_repeat",
+      "cpu": 14,
+      "affinity": [
+        14
+      ]
+    }
+  ]
+}

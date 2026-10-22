@@ -29,7 +29,10 @@ RECORD_WORDS = tuple(offset + step for offset in (0x344, 0x350, 0x35c, 0x374, 0x
                      for step in (4, 8))
 # Firmware DSDT _TMP accessors independently establish these temperature addresses.
 TEMP_OFFSETS = (0x818, 0x820, 0x824, 0x828, 0x82c, 0x830, 0x834, 0x838)
-OFFSETS = sorted(set(VENDOR_OFFSETS + LEGACY_POWER_OFFSETS + RECORD_WORDS + TEMP_OFFSETS))
+# Cross-check candidates from a published DGX MTEL directory. These names do
+# not establish N1X semantics; retain raw values until independently validated.
+DGX_CANDIDATES = (0x008, 0x00c, 0x048, 0x04c, 0x368, 0x36c, 0x370, 0x81c) + tuple(range(0x700, 0x760, 4)) + tuple(range(0x200, 0x280, 4)) + tuple(range(0x400, 0x460, 4))
+OFFSETS = sorted(set(VENDOR_OFFSETS + LEGACY_POWER_OFFSETS + RECORD_WORDS + TEMP_OFFSETS + DGX_CANDIDATES))
 
 
 def read_text(path):
@@ -87,6 +90,16 @@ def capture(output, duration, interval, phase_file=None):
                     sample = {'kind': 'sample', 'monotonic_s': now,
                               'elapsed_s': now - start, 'phase': phase,
                               'registers': values, 'hwmon': hwmon}
+                    sample['cpuinfo_frequency_khz'] = {}
+                    for cpu in (0, 5):
+                        try:
+                            sample['cpuinfo_frequency_khz'][str(cpu)] = int(read_text(
+                                f'/sys/devices/system/cpu/cpufreq/policy{cpu}/cpuinfo_cur_freq'))
+                        except (OSError, ValueError):
+                            sample['cpuinfo_frequency_khz'][str(cpu)] = None
+                    sample['proc_stat'] = [line.split() for line in
+                                           Path('/proc/stat').read_text().splitlines()
+                                           if line.startswith('cpu')]
                     stream.write(json.dumps(sample) + '\n')
                     stream.flush()
                     sequence += 1

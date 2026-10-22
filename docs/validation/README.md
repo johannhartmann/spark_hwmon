@@ -173,6 +173,13 @@ files, 15 original-binary tests skip and the 24 portable/recorded tests remain.
 
 ## Reproduction
 
+The [research follow-up](open-gaps-research.md) establishes E-core counter
+attribution with selective affinity loads, identifies the actual status fields,
+and physically validates all four power controllers and their reset behavior.
+The complete evidence now contains 6,434 samples and 50 tests (18 require the
+pinned vendor binaries). Firmware energy calibration, PROCHOT polarity and
+internal diagnostic encodings remain unproven. The installed driver is unchanged.
+
 Install analysis dependencies in a virtual environment, acquire/extract the
 vendor files using the acquisition report, then run from the repository root:
 

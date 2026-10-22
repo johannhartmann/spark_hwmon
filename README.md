@@ -35,6 +35,12 @@ The matching Windows ARM64 MTEL driver has been extracted from ASUS recovery med
 
 [Reverse-engineering validation](docs/validation/README.md) now includes original Windows-helper execution in an ARM64 emulator, all seven CPUEB table mappings, 1,100 read-only hardware samples under CPU/CUDA loads, and reproducible raw captures. These findings do not add channels or controls to the installed Linux backend.
 
+The [continued hardware investigation](docs/validation/open-gaps-research.md)
+adds affinity-verified E-core counter attribution, corrected status-register
+identities, and bounded physical tests of PL1, PL2, SysPL1 and SysPL2, including
+verified restoration to EC defaults. These are reproducible research tools and
+evidence; the Linux backend above remains ACPI-only.
+
 ### Validation
 
 | Machine | BIOS | Kernel | Result |

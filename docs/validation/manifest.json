@@ -8,5 +8,55 @@
     "samples": 550,
     "sha256_gzip": "c4849166dbc3109d06ad39fed53595b943931f400cfbc559a292f42d10e4a0e5",
     "sha256_jsonl": "1afd6c7c7649d576de877415b02b15b93089bbb20c28b77bb61c7b6c7f1724e4"
+  },
+  "affinity-capture.jsonl.gz": {
+    "samples": 1507,
+    "sha256_gzip": "08594fc1a5132b43f3d3b1cf3c7639c17d38bec735644fb8f26c0ae22d498f52",
+    "sha256_jsonl": "8aa8b797c4be2e9854943203a2d509f80108c843056700002c832c5086f5a601"
+  },
+  "cap-experiment.jsonl.gz": {
+    "samples": 440,
+    "sha256_gzip": "684f151bee057f00ca41e32f7469c5785a36b10b184c5804025b71451326e266",
+    "sha256_jsonl": "fb12fa7a96f45433fa22ec84317d9535d84abbeef0b9a435e8d440147fff4fcf"
+  },
+  "bounds-capture.jsonl.gz": {
+    "samples": 30,
+    "sha256_gzip": "d197ad576f9410f70920c9b20da1ea4e5ab7e23b9ffe68f2ee48f5a2940c18b5",
+    "sha256_jsonl": "69923715f7db2c9de36233bb93e52afd892b7a3c0f01e0a4c22edf94f6e81eb3"
+  },
+  "status-capture.jsonl.gz": {
+    "samples": 411,
+    "sha256_gzip": "bb3a54459a19c4609a95a6571ff72ff74f44021c3174ae0464762a392ca31d03",
+    "sha256_jsonl": "56d8f86aac61e4d3e266a2bd7f437607c6cea297307b2a004ae8377cdf3c2eb7"
+  },
+  "package-cap-experiment.jsonl.gz": {
+    "samples": 440,
+    "sha256_gzip": "fd1071c4e656d2ddc36e444bd4874ff7ab50bfe5f06565400ce65db98da89063",
+    "sha256_jsonl": "133715ef94d91b86f2680dbb9109b507ac32aa03b45fd2fc8f9f14da7bd3aa4d"
+  },
+  "system-cap-experiment.jsonl.gz": {
+    "samples": 439,
+    "sha256_gzip": "8c5d8fe573ad31f09c0eaf32f89ab223aa8dd339cfa0bbe2a1157a40be10e863",
+    "sha256_jsonl": "ebe5467d5357ce03f1789d2e9717def60b948e8760327392bd00293aa0dff6db"
+  },
+  "system-long-cap-experiment.jsonl.gz": {
+    "samples": 1023,
+    "sha256_gzip": "3f6bc1fdf367a98c61ddfb08230cd46ca8fd99eb182d4707e62fb3370adeffdb",
+    "sha256_jsonl": "393c0044c3d7f9918a14ca6d651a9053eca66a8c3b1e25cb5caf4a3a9d6ace99"
+  },
+  "sustained-system-cap-experiment.jsonl.gz": {
+    "samples": 1004,
+    "sha256_gzip": "30674aeb24cb50c1d1c2c78ebe953350275acae5ae993bbd8913b2f1826e8d6f",
+    "sha256_jsonl": "f0d317002e77447b3c983575ac752aaeb44c6b6380e8853c68f2e80af78b2039"
+  },
+  "pid-capture.jsonl.gz": {
+    "samples": 30,
+    "sha256_gzip": "3382a8aad2c7deca4eed4a1af121afb8684ca7c123ed425ed73eeb9de7b80352",
+    "sha256_jsonl": "bcfe04b89095fa114672f389e363c1110843d42cd7823bbacaa6331417c42951"
+  },
+  "final-state-capture.jsonl.gz": {
+    "samples": 10,
+    "sha256_gzip": "f456c3601b33f3e0b6b55ff19563cccb0fdac4244bbd7a1b62130e14a57ae030",
+    "sha256_jsonl": "50277dfad7dec30beeae39823e646034ee074ac9dfd672d8f8c541a802899993"
   }
 }

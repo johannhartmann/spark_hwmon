@@ -74,6 +74,39 @@ class VendorContractTests(unittest.TestCase):
         self.assertEqual(m.run(m.UPDATE), 0)
         self.assertEqual(m.writes, [(0, 4, 1)])
 
+    def test_original_descriptor_reads_spbm_without_update(self):
+        m = self.machine(self.nvpcf)
+        m.uc.mem_write(m.MMIO + 0x310, struct.pack('<I', 745))
+        # Descriptor byte 9: SPBM bus 5; byte 10: length; byte 11: read 0.
+        descriptor = (5 << 8) | (4 << 16)
+        self.assertEqual(m.run(0x216d0, index=40, buffer=descriptor,
+                               length=m.BUFFER), 0)
+        self.assertEqual(m.uc.mem_read(m.BUFFER, 8), struct.pack('<Q', 745))
+        self.assertEqual(m.writes, [])
+
+    def test_original_descriptor_writes_then_updates_in_emulated_ram(self):
+        for index in range(8):
+            with self.subTest(index=index):
+                m = self.machine(self.nvpcf, contexts=[self.machine.CONTEXT] * 4)
+                m.put64(m.BUFFER, index)
+                descriptor = (5 << 8) | (4 << 16) | (2 << 24)
+                self.assertEqual(m.run(0x216d0, index=45000, buffer=descriptor,
+                                       length=m.BUFFER), 0)
+                offset = 0x100 + index * 4
+                expected = [(offset + i, 1, byte)
+                            for i, byte in enumerate(struct.pack('<I', 45000))]
+                self.assertEqual(m.writes, expected + [(0, 4, 1)])
+
+    def test_original_descriptor_does_not_commit_a_failed_write(self):
+        for index, direction, expected in ((48, 2, 0x3b), (0, 1, 0x56)):
+            with self.subTest(index=index, direction=direction):
+                m = self.machine(self.nvpcf)
+                m.put64(m.BUFFER, index)
+                descriptor = (5 << 8) | (4 << 16) | (direction << 24)
+                self.assertEqual(m.run(0x216d0, index=45000, buffer=descriptor,
+                                       length=m.BUFFER), expected)
+                self.assertEqual(m.writes, [])
+
     def test_original_rejects_invalid_indices_without_access(self):
         for helper in (self.machine.READ, self.machine.WRITE):
             for index in (48, 49, 0xffffffff, -1):
