@@ -74,6 +74,49 @@ class VendorContractTests(unittest.TestCase):
         self.assertEqual(m.run(m.UPDATE), 0)
         self.assertEqual(m.writes, [(0, 4, 1)])
 
+    def test_original_mtel_platform_layouts_identify_status_and_energy(self):
+        for platform, mapping_size in ((1, 0x800), (2, 0x1000), (3, 0x1000)):
+            with self.subTest(platform=platform):
+                m = self.parser(self.mtel)
+                layout = m.platform_layout(platform)
+                field = lambda context_offset: layout[(context_offset - 0x14) // 4]
+                self.assertEqual(layout[:2], (0x1c238000, mapping_size))
+                self.assertEqual((field(0x1a0), field(0x1a4)), (0x48, 0x4c))
+                self.assertEqual(tuple(field(x) for x in range(0x1b0, 0x1ec, 4)),
+                                 tuple(range(0x344, 0x380, 4)))
+                self.assertFalse(set(layout) & {0x38, 0x380, 0x384, 0x388, 0x38c})
+
+    def test_original_mtel_status_reader_preserves_raw_prochot(self):
+        for raw in (0, 1, 2, 0x80000000, 0xffffffff):
+            with self.subTest(raw=raw):
+                m = self.parser(self.mtel)
+                status, result, reads, writes = m.read_spbm('status', {0x48: 8, 0x4c: raw})
+                self.assertEqual((status, result), (0, (8, raw)))
+                self.assertEqual(reads, [(0x48, 4), (0x4c, 4)])
+                self.assertEqual(writes, [])
+
+    def test_original_mtel_energy_reader_preserves_all_15_words(self):
+        offsets = tuple(range(0x344, 0x380, 4))
+        values = {offset: (0xffffffff - i * 7919) for i, offset in enumerate(offsets)}
+        m = self.parser(self.mtel)
+        status, result, reads, writes = m.read_spbm('energy', values)
+        self.assertEqual(status, 0)
+        self.assertEqual(result, tuple(values.values()))
+        self.assertEqual(reads, [(offset, 4) for offset in offsets])
+        self.assertEqual(writes, [])
+
+    def test_original_mtel_power_reader_masks_selected_channels(self):
+        offsets = tuple(range(0x300, 0x340, 4))
+        values = {offset: 1001 + i * 111 for i, offset in enumerate(offsets)}
+        m = self.parser(self.mtel)
+        status, result, reads, writes = m.read_spbm('power', values)
+        self.assertEqual(status, 0)
+        masked = {7, 8, 10, 11, 12, 15}
+        self.assertEqual(result, tuple(0 if i in masked else values[offset]
+                                       for i, offset in enumerate(offsets)))
+        self.assertEqual(reads, [(offset, 4) for offset in offsets])
+        self.assertEqual(writes, [])
+
     def test_original_sampler_validator_spbm_control_contract(self):
         # CPU type 2, bus 5. Execute the original validator, not a Python model.
         cases = ((0, 0, 46, 4, 1), (0, 0, 48, 4, 1),

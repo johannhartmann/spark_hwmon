@@ -1,0 +1,49 @@
+{
+  "scope": "Local Ghidra inventory, not proof of exhaustive semantic coverage; completed decompilation can contain warnings or incorrect types. Proprietary output is not redistributed.",
+  "ghidra_version": "12.2 PUBLIC",
+  "package": "NVIDIA 617.42 RTX Spark Windows ARM64",
+  "artifacts": [
+    {
+      "package_path": "Display.Driver/nvapia64_impl.dll",
+      "sha256": "18a93b11e666dd8a65528e2c0f080275fa46051fc556553de0d344458e98f1c2",
+      "bytes": 5922544,
+      "functions_exported": 13307,
+      "decompiler_completed": 13306
+    },
+    {
+      "package_path": "Display.Driver/Display.NvContainer/plugins/LocalSystem/_DgxSparkTelemetry.dll",
+      "sha256": "136da1c27e382e087668ab281952b9d971008968bf3391f6476956130e165331",
+      "bytes": 3427560,
+      "functions_exported": 11599,
+      "decompiler_completed": 11599
+    },
+    {
+      "package_path": "FrameViewSDK/FvContainer/plugins/SystemDataCollectorsContainerPlugin_ARM64.dll",
+      "sha256": "fa19270f9fd78567f367bdc32cae1e0345d4f56863c0f09b38a2fbb0d5852a45",
+      "bytes": 724080,
+      "functions_exported": 2890,
+      "decompiler_completed": 2890
+    },
+    {
+      "package_path": "FrameViewSDK/bin/nvrla.exe",
+      "sha256": "47e5f8e67104509bb0bd5195cce263e40c08769e0caad54f1bb8d3fb5d6b9cd4",
+      "bytes": 1388656,
+      "functions_exported": 3334,
+      "decompiler_completed": 3334
+    },
+    {
+      "package_path": "FrameViewSDK/FvContainer/plugins.system/AggregatorContainerPlugin_ARM64.dll",
+      "sha256": "5b1b0b52410b574e17bb2d9156e542f113a450de2a7e0abb95b0ec062cfb2a87",
+      "bytes": 240240,
+      "functions_exported": 1188,
+      "decompiler_completed": 1188
+    },
+    {
+      "package_path": "FrameViewSDK/nvfvsdksvc_arm64.exe",
+      "sha256": "a0fc2f7dfb938cdcc16f33ab516bcb37ac2bd07f8638334bcef335a7b6804c78",
+      "bytes": 1006704,
+      "functions_exported": 3010,
+      "decompiler_completed": 3010
+    }
+  ]
+}

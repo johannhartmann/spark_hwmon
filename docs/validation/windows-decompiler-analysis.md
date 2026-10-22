@@ -72,6 +72,84 @@ AArch64 main code and x64 thunks. Import main code into Ghidra with
 `-processor AARCH64:LE:64:v8A -cspec windows`; do not interpret it wholesale as
 x86-64. Some thunk functions fail decompilation and require separate handling.
 
+## MTEL platform tables and complete reader execution
+
+Further analysis uses `nvMeTelemetryKMD.sys` 2.2.0.0, SHA-256
+`7028cd64cdcced2382181cf29c7f9f6f21abf192412870c0e866d8e137cefced`.
+The selector at RVA `0x38668` chooses one of three static platform templates;
+the copier at `0x387b0` rearranges that template into the device context.
+**Context offsets must not be inferred from the order of the DGX ACPI keys.**
+The actual copier performs explicit reordering and includes additional fields.
+`MtelMachine.platform_layout()` executes both routines from the pinned binary.
+
+All three templates select SPBM base `0x1c238000`. Platform 1 requests `0x800`
+bytes, platforms 2 and 3 request `0x1000`. The local N1X DSDT's `PLID` returns 2;
+this agrees with platform 2, although emulating a template is not a complete
+Windows device-initialization test. Key extracted context members are:
+
+| Device-context member | Register offset |
+|---|---|
+| `0x1a0`, `0x1a4` | `0x048` controller status, `0x04c` PROCHOT |
+| `0x1a8`, `0x1ac` | `0x008` PID winner, `0x00c` PID-winner lock |
+| `0x1b0..0x1e8`, stride 4 | `0x344..0x37c`, stride 4: five energy triplets |
+
+The original status reader at RVA `0x134e0` copies the two 32-bit status words
+directly into its output. Emulation with PROCHOT inputs 0, 1, 2, `0x80000000`
+and `0xffffffff` returns each unchanged. Its only MMIO reads are `0x048` and
+`0x04c`; it performs no MMIO writes. Thus **this Windows API does not normalize
+PROCHOT to a Boolean or invert it**. That establishes the transport semantics,
+not whether raw 1 means asserted, deasserted, enabled or something else in
+firmware. The driver's raw reader cannot settle physical polarity.
+
+The original energy reader at RVA `0x138a0` reads all 15 consecutive 32-bit
+words from `0x344` through `0x37c` into 15 separate output slots. Emulation
+using distinct values near `UINT32_MAX` confirms exact preservation, including
+the overflow and clear words, with no MMIO writes. **It neither combines them
+into wider counters nor applies a scale, baseline, rounding rule or per-domain
+correction.** A 32-bit Windows transfer does not prove the physical accumulator
+width or the overflow word's arithmetic meaning. This also does not establish
+the firmware's absolute energy unit or its E-core integration formula.
+
+The original power reader at RVA `0x131d0` first reads all 16 words
+`0x300..0x33c`, then zeros output slots 7, 8, 10, 11, 12 and 15. The remaining
+slots, including E and P power, are returned unchanged. Tests distinguish
+actual reads from those overwritten outputs. Zero in this Windows structure
+therefore need not mean zero at the corresponding firmware address; it does
+not establish that the physical channel is absent.
+
+None of the three extracted MTEL layouts registers `0x038`, `0x380`, `0x384`,
+`0x388` or `0x38c`. NVPCF independently exposes `0x380` and `0x38c` as raw
+indexed samples, but that access path provides no physical-unit decoding.
+The numerical fits in the hardware captures remain hypotheses about encoding,
+not evidence that these words are voltage/current/frequency sensors.
+
+Four additional opt-in tests execute these original routines, verify the
+platform layouts and raw return values, and record the precise emulated MMIO
+accesses. They deliberately do not trigger a physical overflow or thermal trip.
+
+## Wider consumer search and remaining boundary
+
+[The inventory](windows-consumer-inventory.json) pins six additional user-mode
+artifacts and records their Ghidra export counts: the native NVAPI implementation,
+DGX telemetry plugin, FrameView collector, aggregator, capture executable and
+service. This is an analysis inventory, **not proof that every decompiled
+function is correct or every possible consumer has been traced**. The DGX
+plugin's `SPBM_TRACKER` string occurs among reset-reason enum names; that name
+alone does not identify a power-calibration routine. The
+[public NVAPI interface list](https://github.com/NVIDIA/nvapi/blob/main/nvapi_interface.h)
+does not provide a named N1X energy/PROCHOT contract.
+
+The concrete remaining target is the producer of the SPBM words, or a consumer
+that assigns their semantics. Neither the executed Windows register readers
+nor the decoded SDK watt conversion supplies the missing E-core accumulation
+formula, PROCHOT interpretation or packed diagnostic units. A usable SSPM/SPBM
+firmware image has not been extracted from these Windows packages. The CPUEB
+SRAM snapshot acquired earlier is not established as that firmware image.
+Continuing requires identifying and extracting the relevant firmware payload
+or locating another typed consumer; arbitrary SRAM bytes must not be assumed
+to be executable code. There is no evidence-backed calibration or polarity
+patch to apply from these findings alone.
+
 ## Reproduction
 
 Keep acquired binaries, Ghidra projects and generated proprietary decompiler
