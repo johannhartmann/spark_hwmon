@@ -35,10 +35,16 @@ preserves an external writer's replacement request. Runtime-check fixtures
 cover simultaneous GPU temperature/power labels and rejection of invented
 standard energy values.
 
-Live installation and control verification are recorded below after the DKMS
-replacement completes. The earlier physical load experiments are not repeated:
-`tests/check-n1x-controls.py` makes four temporary 1 W reductions and restores
-each immediately, requiring initially zero OS requests.
+Live verification completed on 2026-10-22 with installed and loaded module
+`0.3.0.rtxspark.5` on `7.2.8-23-omarchy-p16-asus`. The strict runtime check
+passed for all 23 channels (15 power, eight temperatures), the four controls
+and raw interfaces. Temperatures agreed with the ACPI thermal zones.
+
+[The sysfs control results](n1x-sysfs-controls.json) record temporary reductions
+of PL1 55→54 W, PL2 70→69 W, SysPL1 131→130 W and SysPL2 145→144 W. Each
+request was reflected in the effective limit, then reset to its previous EC
+default. All four OS requests were zero afterwards. These are sysfs integration
+checks, not repetitions of the earlier sustained physical-load experiments.
 
 ## Remaining specification gaps
 

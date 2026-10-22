@@ -1,0 +1,34 @@
+{
+  "module_version": "0.3.0.rtxspark.5",
+  "controls": [
+    {
+      "limit": "pl1",
+      "before_uw": 55000000,
+      "requested_uw": 54000000,
+      "effective_uw": 54000000,
+      "restored_uw": 55000000
+    },
+    {
+      "limit": "pl2",
+      "before_uw": 70000000,
+      "requested_uw": 69000000,
+      "effective_uw": 69000000,
+      "restored_uw": 70000000
+    },
+    {
+      "limit": "syspl1",
+      "before_uw": 131000000,
+      "requested_uw": 130000000,
+      "effective_uw": 130000000,
+      "restored_uw": 131000000
+    },
+    {
+      "limit": "syspl2",
+      "before_uw": 145000000,
+      "requested_uw": 144000000,
+      "effective_uw": 144000000,
+      "restored_uw": 145000000
+    }
+  ],
+  "all_requests_zero": true
+}
